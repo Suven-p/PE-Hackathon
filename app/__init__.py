@@ -89,9 +89,9 @@ def create_app():
     def health():
         try:
             db.execute_sql("SELECT 1")
-            return jsonify(status="ok", db="connected")
+            return jsonify({"status": "success", "data": {"db": "connected"}})
         except Exception:
-            return jsonify(status="error", db="unreachable"), 503
+            return jsonify({"status": "error", "message": "Database unreachable"}), 503
 
     @app.errorhandler(Exception)
     def handle_exception(e):
