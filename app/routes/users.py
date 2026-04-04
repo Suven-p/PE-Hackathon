@@ -89,8 +89,8 @@ def bulk_create_users_endpoint():
 
     result = bulk_create_users(db, rows)
     return jsonify({
-        "imported_users": result["imported"],
-        "total_rows": result["total"],
+        "imported": result["imported"],
+        "total": result["total"],
         "status": 201,
     }), 201
 
