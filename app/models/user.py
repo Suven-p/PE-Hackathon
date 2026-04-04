@@ -57,6 +57,8 @@ def register_user(username: str, email: str) -> User:
     if len(email) > lengths["email"]:
         raise ValueError(
             f"Email too long. Must be at most {lengths['email']} characters")
+    if User.select().where(User.email == email).exists():
+        raise ValueError("Email already in use")
 
     return User.create(username=username, email=email)
 
