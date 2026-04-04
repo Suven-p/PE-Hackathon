@@ -1,17 +1,12 @@
-# MLH PE Hackathon — Flask + Peewee + PostgreSQL Template
-
-A minimal hackathon starter template. You get the scaffolding and database wiring — you build the models, routes, and CSV loading logic.
+# MLH PE Hackathon — Project by Purrduction Engineers
 
 **Stack:** Flask · Peewee ORM · PostgreSQL · uv
-
-## **Important**
-
-You need to work with around the seed files that you can find in [MLH PE Hackathon](https://mlh-pe-hackathon.com) platform. This will help you build the schema for the database and have some data to do some testing and submit your project for judging. If you need help with this, reach out on Discord or on the Q&A tab on the platform.
 
 ## Prerequisites
 
 - **uv** — a fast Python package manager that handles Python versions, virtual environments, and dependencies automatically.
   Install it with:
+
   ```bash
   # macOS / Linux
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -19,19 +14,21 @@ You need to work with around the seed files that you can find in [MLH PE Hackath
   # Windows (PowerShell)
   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
   ```
+
   For other methods see the [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/).
+
 - PostgreSQL running locally (you can use Docker or a local instance)
 
 ## uv Basics
 
 `uv` manages your Python version, virtual environment, and dependencies automatically — no manual `python -m venv` needed.
 
-| Command | What it does |
-|---------|--------------|
-| `uv sync` | Install all dependencies (creates `.venv` automatically) |
-| `uv run <script>` | Run a script using the project's virtual environment |
-| `uv add <package>` | Add a new dependency |
-| `uv remove <package>` | Remove a dependency |
+| Command               | What it does                                             |
+| --------------------- | -------------------------------------------------------- |
+| `uv sync`             | Install all dependencies (creates `.venv` automatically) |
+| `uv run <script>`     | Run a script using the project's virtual environment     |
+| `uv add <package>`    | Add a new dependency                                     |
+| `uv remove <package>` | Remove a dependency                                      |
 
 ## Quick Start
 
@@ -39,17 +36,11 @@ You need to work with around the seed files that you can find in [MLH PE Hackath
 # 1. Clone the repo
 git clone <repo-url> && cd mlh-pe-hackathon
 
-# 2. Install dependencies
-uv sync
-
-# 3. Create the database
-createdb hackathon_db
-
-# 4. Configure environment
+# 2. Configure environment
 cp .env.example .env   # edit if your DB credentials differ
 
-# 5. Run the server
-uv run run.py
+# 3. Run the application
+docker compose up -d
 
 # 6. Verify
 curl http://localhost:5000/health
