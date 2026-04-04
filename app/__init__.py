@@ -91,7 +91,7 @@ def create_app():
             db.execute_sql("SELECT 1")
             return jsonify(status="ok", db="connected", hostname=os.uname().nodename), 200
         except Exception:
-            return jsonify(status="error", db="unreachable"), 503
+            return jsonify({"status": "error", "message": "Database unreachable", "hostname": os.uname().nodename}), 503
 
     @app.errorhandler(Exception)
     def handle_exception(e):
