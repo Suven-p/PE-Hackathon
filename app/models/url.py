@@ -2,15 +2,18 @@ import secrets
 import string
 from datetime import datetime, timezone
 
-from peewee import BooleanField, CharField, DateTimeField, ForeignKeyField, IntegrityError
+from peewee import BooleanField, CharField, DateTimeField, ForeignKeyField, IntegrityError, PostgresqlDatabase
 
 from app.database import BaseModel
 from app.models.user import User
+from app.utils.isPostgres import is_postgres
+
+table_name = "urls"
 
 
 class Url(BaseModel):
     class Meta:
-        table_name = "urls"
+        table_name = table_name
         indexes = (
             (("short_code",), True),  # UNIQUE index — also speeds up lookups
         )
@@ -81,3 +84,14 @@ def update_short_url(url: "Url", original_url: str = None, title: str = None, is
     url.updated_at = datetime.now(timezone.utc)
     url.save()
     return url
+
+
+def set_url_sequence_value(db):
+    """Set the sequence value for the urls table to max(id)+1. Safe to run multiple times."""
+    if is_postgres(db):
+        db.execute_sql(
+            f"SELECT setval(pg_get_serial_sequence('{table_name}', 'id'), (SELECT COALESCE(MAX(id), 0) FROM {table_name}) + 1, false)"
+        )
+    else:
+        raise NotImplementedError(
+            "Sequence management not implemented for this database type")

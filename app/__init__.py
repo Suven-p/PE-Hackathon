@@ -6,9 +6,9 @@ import os
 
 from app.database import init_db
 from app.routes import register_routes
-from app.models.user import User
-from app.models.url import Url
-from app.models.event import Event
+from app.models.user import User, set_user_sequence_value
+from app.models.url import Url, set_url_sequence_value
+from app.models.event import Event, set_event_sequence_value
 
 
 def _migrate_schema(db):
@@ -43,6 +43,7 @@ def _insert_sample_data(db):
 
             with db.atomic():
                 User.insert_many(data).on_conflict_ignore().execute()
+            set_user_sequence_value(db)
 
         with open(os.path.join(seed_directory, "urls.csv"), "r") as f:
             reader = csv.DictReader(f)
@@ -51,6 +52,7 @@ def _insert_sample_data(db):
 
             with db.atomic():
                 Url.insert_many(data).on_conflict_ignore().execute()
+            set_url_sequence_value(db)
 
         with open(os.path.join(seed_directory, "events.csv"), "r") as f:
             reader = csv.DictReader(f)
@@ -59,6 +61,7 @@ def _insert_sample_data(db):
 
             with db.atomic():
                 Event.insert_many(data).on_conflict_ignore().execute()
+            set_event_sequence_value(db)
     else:
         print("Database initialization skipped. Set DATABASE_INITIALIZE=true to enable.")
 
