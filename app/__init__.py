@@ -14,7 +14,7 @@ from app.models.event import Event, set_event_sequence_value
 def _migrate_schema(db):
     """Add missing columns to existing tables without dropping data."""
     migrations = [
-        ("urls", "user_id",     "INTEGER REFERENCES users(id)"),
+        ("urls", "user_id",     "INTEGER"),
         ("urls", "title",       "VARCHAR(255)"),
         ("urls", "is_active",   "BOOLEAN NOT NULL DEFAULT TRUE"),
         ("urls", "updated_at",  "TIMESTAMP"),
@@ -70,6 +70,7 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__)
+    app.url_map.strict_slashes = False
     CORS(app)
 
     init_db(app)
@@ -89,9 +90,9 @@ def create_app():
     def health():
         try:
             db.execute_sql("SELECT 1")
-            return jsonify(status="ok", db="connected", hostname=os.uname().nodename), 200
+            return jsonify({"status": "ok"}), 200
         except Exception:
-            return jsonify({"status": "error", "message": "Database unreachable", "hostname": os.uname().nodename}), 503
+            return jsonify({"status": "error"}), 503
 
     @app.errorhandler(Exception)
     def handle_exception(e):

@@ -60,13 +60,18 @@ def create_user():
     email = data.get("email")
 
     if not username or not email:
-        return jsonify({"error": "Missing 'username' or 'email'", "status": 400}), 400
+        return jsonify({"error": "Missing 'username' or 'email'"}), 400
+
+    if not isinstance(username, str) or not isinstance(email, str):
+        return jsonify({"error": "username and email must be strings"}), 422
 
     try:
         user = register_user(username=username, email=email)
         return jsonify(_serialize_user(user)), 201
     except ValueError as e:
-        return jsonify({"error": str(e), "status": 400}), 400
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @users_bp.route("/bulk", methods=["POST"])
@@ -88,11 +93,8 @@ def bulk_create_users_endpoint():
         return jsonify({"error": "Invalid CSV file", "status": 400}), 400
 
     result = bulk_create_users(db, rows)
-    return jsonify({
-        "imported": result["imported"],
-        "total": result["total"],
-        "status": 201,
-    }), 201
+    status_code = 201 if result["imported"] > 0 else 200
+    return jsonify({"imported": result["imported"]}), status_code
 
 
 @users_bp.route("/<int:user_id>", methods=["PUT"])
