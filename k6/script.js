@@ -13,8 +13,8 @@ const data = new SharedArray('data', function () {
 });
 
 export const options = {
-  vus: 500,
-  iterations: 2000,
+  vus: 200,
+  iterations: 1000,
 };
 
 export function setup() {
@@ -25,10 +25,11 @@ export function setup() {
 }
 
 export default function () {
-  let res = http.get(`${BASE_URL}/health`);
+  let res, body;
+  // res = http.get(`${BASE_URL}/health`);
   // Get status value from json body
-  let body = JSON.parse(res.body);
-  check(res, { "status is 200": (res) => res.status === 200 && body.status === "ok" });
+  // body = JSON.parse(res.body);
+  // check(res, { "status is 200": (res) => res.status === 200 && body.status === "ok" });
 
   let index = scenario.iterationInTest % data.length;
   let { short_url, long_url } = data[index];

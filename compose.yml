@@ -30,7 +30,7 @@ services:
       tempo:
         condition: service_started
     deploy:
-      replicas: 2
+      replicas: 3
 
   nginx:
     image: nginx:1.27-alpine
