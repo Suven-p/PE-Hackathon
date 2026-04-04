@@ -29,7 +29,7 @@ def _migrate_schema(db):
 
 def _insert_sample_data(db):
     should_initialize = os.environ.get(
-        "DATABASE_INITIALIZE", "false").lower() == "true"
+        "DATABASE_INITIALIZE", "true").lower() == "true"
     if should_initialize:
         seed_directory = os.environ.get("DATABASE_SEED_DIRECTORY", "db_seed")
         if not os.path.isdir(seed_directory):
