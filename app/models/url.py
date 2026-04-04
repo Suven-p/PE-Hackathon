@@ -92,6 +92,14 @@ def update_short_url(url: "Url", original_url: str = None, title: str = None, is
     return url
 
 
+def delete_url(url_id: int) -> None:
+    """Delete a URL by ID. Raises LookupError if not found."""
+    url = Url.get_or_none(Url.id == url_id)
+    if not url:
+        raise LookupError("URL not found")
+    url.delete_instance()
+
+
 def set_url_sequence_value(db):
     """Set the sequence value for the urls table to max(id)+1. Safe to run multiple times."""
     if is_postgres(db):

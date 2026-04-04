@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, redirect, request
 
 from app.models.event import log_event
-from app.models.url import Url, UrlInactiveError, create_short_url, get_url_by_code, update_short_url
+from app.models.url import Url, UrlInactiveError, create_short_url, delete_url, get_url_by_code, update_short_url
 from app.models.user import User
 
 urls_bp = Blueprint("urls", __name__)
@@ -55,9 +55,12 @@ def create_url():
 @urls_bp.route("/urls", methods=["GET"])
 def list_urls():
     user_id = request.args.get("user_id")
+    is_active = request.args.get("is_active")
     query = Url.select().order_by(Url.created_at.desc())
     if user_id:
         query = query.where(Url.user == user_id)
+    if is_active is not None:
+        query = query.where(Url.is_active == (is_active.lower() == "true"))
     return jsonify([_url_response(url) for url in query]), 200
 
 
@@ -94,6 +97,15 @@ def update_url(url_id):
         return jsonify({"error": str(e)}), 400
     except Exception:
         return jsonify({"error": "Internal server error"}), 500
+
+
+@urls_bp.route("/urls/<int:url_id>", methods=["DELETE"])
+def delete_url_endpoint(url_id):
+    try:
+        delete_url(url_id)
+        return jsonify({"message": "URL deleted"}), 200
+    except LookupError as e:
+        return jsonify({"error": str(e)}), 404
 
 
 @urls_bp.route("/<short_code>", methods=["GET"])
