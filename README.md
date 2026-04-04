@@ -42,9 +42,17 @@ cp .env.example .env   # edit if your DB credentials differ
 # 3. Run the application
 docker compose up -d
 
-# 6. Verify
+# 4. Verify
 curl http://localhost:5000/health
 # → {"status":"ok"}
+
+# 5. (Optional) Setup venv locally for autocomplete
+# In Windows PowerShell:
+$env:UV_PROJECT_ENVIRONMENT = ".venv_local"
+uv sync
+# In Linux:
+export UV_PROJECT_ENVIRONMENT=".venv_local"
+uv sync
 ```
 
 ## Project Structure
