@@ -11,6 +11,7 @@ urls_bp = Blueprint("urls", __name__)
 
 def _url_response(url: Url) -> dict:
     return {
+        "id": url.id,
         "short_code": url.short_code,
         "original_url": url.original_url,
         "title": url.title,
