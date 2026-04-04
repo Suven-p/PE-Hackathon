@@ -88,12 +88,11 @@ def bulk_create_users_endpoint():
         return jsonify({"error": "Invalid CSV file", "status": 400}), 400
 
     result = bulk_create_users(db, rows)
-    status_code = 201 if result["imported"] > 0 else 200
     return jsonify({
         "imported_users": result["imported"],
         "total_rows": result["total"],
-        "status": status_code,
-    }), status_code
+        "status": 201,
+    }), 201
 
 
 @users_bp.route("/<int:user_id>", methods=["PUT"])
