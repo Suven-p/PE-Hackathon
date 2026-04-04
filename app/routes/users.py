@@ -4,7 +4,7 @@ import io
 from flask import Blueprint, jsonify, request
 
 from app.database import db
-from app.models.user import User, register_user, update_user as update_user_logic, set_user_sequence_value, bulk_create_users
+from app.models.user import User, register_user, update_user as update_user_logic, bulk_create_users, delete_user as delete_user_logic
 
 users_bp = Blueprint("users", __name__, url_prefix="/users")
 
@@ -72,8 +72,8 @@ def create_user():
 @users_bp.route("/bulk", methods=["POST"])
 def bulk_create_users_endpoint():
     uploaded_file = request.files.get("file")
-    if not uploaded_file or not uploaded_file.filename:
-        return jsonify({"error": "Missing file 'users.csv' in multipart/form-data", "status": 400}), 400
+    if not uploaded_file:
+        return jsonify({"error": "Missing file 'file' in multipart/form-data", "status": 400}), 400
 
     try:
         csv_stream = io.TextIOWrapper(
@@ -117,7 +117,7 @@ def update_user(user_id: int):
 @users_bp.route("/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id: int):
     try:
-        delete_user(id=user_id)
+        delete_user_logic(user_id)
         return jsonify({"message": "User deleted", "status": 200}), 200
     except LookupError as e:
         return jsonify({"error": str(e), "status": 404}), 404

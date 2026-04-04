@@ -18,7 +18,8 @@ class Url(BaseModel):
             (("short_code",), True),  # UNIQUE index — also speeds up lookups
         )
 
-    user = ForeignKeyField(User, backref="urls", null=True)
+    user = ForeignKeyField(User, backref="urls",
+                           null=True, on_delete='CASCADE')
     short_code = CharField(max_length=10, unique=True)
     original_url = CharField(max_length=2048)
     title = CharField(max_length=255, null=True)
