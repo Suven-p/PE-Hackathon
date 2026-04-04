@@ -23,6 +23,17 @@ class Event(BaseModel):
 
 
 # --- Business logic ---
+def serialize_event(event: Event) -> dict:
+    """Convert an Event instance to a dict for JSON serialization."""
+    return {
+        "id": event.id,
+        "url_id": event.url_id,
+        "user_id": event.user_id,
+        "event_type": event.event_type,
+        "timestamp": event.timestamp.isoformat() if event.timestamp else None,
+        "details": json.loads(event.details) if event.details else None,
+    }
+
 
 def log_event(url: Url, event_type: str, user=None, details: dict = None) -> None:
     """Record an event for a URL. Best-effort: never raises."""
@@ -40,7 +51,13 @@ def log_event(url: Url, event_type: str, user=None, details: dict = None) -> Non
 
 def get_events_for_url(url: Url) -> list:
     """Return all events for a given URL, newest first."""
-    return list(Event.select().where(Event.url == url).order_by(Event.timestamp.desc()))
+    events = Event.select().where(Event.url == url).order_by(Event.timestamp.desc())
+    return list(events)
+
+
+def get_all_events() -> list:
+    """Return all events, newest first."""
+    return list(Event.select().order_by(Event.timestamp.desc()))
 
 
 def set_event_sequence_value(db):
