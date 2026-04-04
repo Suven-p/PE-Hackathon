@@ -63,6 +63,11 @@ class UrlInactiveError(Exception):
     pass
 
 
+def get_all_urls():
+    """Return a list of all URLs. In a real app, this would be paginated."""
+    return list(Url.select().order_by(Url.created_at.desc()))
+
+
 def get_url_by_code(short_code: str) -> "Url":
     """Look up a URL by short code. Raises Url.DoesNotExist if not found, UrlInactiveError if inactive."""
     url = Url.get(Url.short_code == short_code)

@@ -21,6 +21,12 @@ def _url_response(url: Url) -> dict:
     }
 
 
+@urls_bp.route("/urls", methods=["GET"])
+def list_urls():
+    urls = Url.select().order_by(Url.created_at.desc())
+    return jsonify([_url_response(url) for url in urls]), 200
+
+
 @urls_bp.route("/shorten", methods=["POST"])
 def shorten():
     data = request.get_json(silent=True)
@@ -87,7 +93,8 @@ def update_url(short_code):
             title=data.get("title"),
             is_active=data.get("is_active"),
         )
-        log_event(updated, "updated", user=user, details={"short_code": short_code})
+        log_event(updated, "updated", user=user,
+                  details={"short_code": short_code})
         return jsonify(_url_response(updated)), 200
     except ValueError as e:
         return jsonify({"error": str(e), "status": 400}), 400
