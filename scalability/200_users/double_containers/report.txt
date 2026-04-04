@@ -1,0 +1,46 @@
+  █ TOTAL RESULTS
+
+    checks_total.......: 4000   234.440879/s
+    checks_succeeded...: 84.32% 3373 out of 4000
+    checks_failed......: 15.67% 627 out of 4000
+
+    ✗ status is 200
+      ↳  83% — ✓ 1678 / ✗ 322
+    ✗ redirects to long URL
+      ↳  84% — ✓ 1695 / ✗ 305
+
+    HTTP
+    http_req_blocked...............: avg=9.28ms   min=1.48µs   med=5.77µs   max=354.18ms p(90)=12.28µs  p(95)=7.45ms
+
+    http_req_connecting............: avg=9.25ms   min=0s       med=0s       max=354.1ms  p(90)=0s       p(95)=4.48ms
+
+    http_req_duration..............: avg=819.55ms min=17.94ms  med=830.08ms max=1.41s    p(90)=1.12s    p(95)=1.2s
+
+      { expected_response:true }...: avg=880.61ms min=17.94ms  med=925.07ms max=1.41s    p(90)=1.14s    p(95)=1.23s
+
+    http_req_failed................: 15.67% 627 out of 4001
+    http_req_receiving.............: avg=155.72µs min=21.53µs  med=135.15µs max=5.64ms   p(90)=246.75µs p(95)=299.68µs
+    http_req_sending...............: avg=35.63µs  min=5.32µs   med=24.38µs  max=657.07µs p(90)=59.91µs  p(95)=85.55µs
+
+    http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s
+
+    http_req_waiting...............: avg=819.36ms min=17.39ms  med=829.82ms max=1.41s    p(90)=1.12s    p(95)=1.2s
+
+    http_reqs......................: 4001   234.499489/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.66s    min=209.37ms med=1.68s    max=2.69s    p(90)=2.16s    p(95)=2.31s
+
+    iterations.....................: 2000   117.22044/s
+    vus............................: 59     min=59          max=200
+    vus_max........................: 200    min=200         max=200
+
+    NETWORK
+    data_received..................: 1.4 MB 84 kB/s
+    data_sent......................: 348 kB 20 kB/s
+
+
+
+
+running (00m17.1s), 000/200 VUs, 2000 complete and 0 interrupted iterations
+default ✓ [ 100% ] 200 VUs  00m17.1s/10m0s  2000/2000 shared iters
