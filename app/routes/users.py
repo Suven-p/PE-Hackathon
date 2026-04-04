@@ -71,7 +71,7 @@ def create_user():
 
 @users_bp.route("/bulk", methods=["POST"])
 def bulk_create_users_endpoint():
-    uploaded_file = request.files.get("users.csv")
+    uploaded_file = request.files.get("file")
     if not uploaded_file or not uploaded_file.filename:
         return jsonify({"error": "Missing file 'users.csv' in multipart/form-data", "status": 400}), 400
 
