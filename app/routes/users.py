@@ -112,3 +112,12 @@ def update_user(user_id: int):
         return jsonify({"error": str(e), "status": 400}), 400
     except LookupError as e:
         return jsonify({"error": str(e), "status": 404}), 404
+
+
+@users_bp.route("/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id: int):
+    try:
+        delete_user(id=user_id)
+        return jsonify({"message": "User deleted", "status": 200}), 200
+    except LookupError as e:
+        return jsonify({"error": str(e), "status": 404}), 404

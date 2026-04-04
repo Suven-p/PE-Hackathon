@@ -78,6 +78,14 @@ def update_user(id: int, username: str):
     return user
 
 
+def delete_user(id: int):
+    """Delete a user by ID. Raises LookupError if user not found."""
+    user = User.get_or_none(User.id == id)
+    if not user:
+        raise LookupError("User not found")
+    user.delete_instance()
+
+
 def set_user_sequence_value(db):
     """Set the sequence value for the users table to max(id)+1. Safe to run multiple times."""
     if is_postgres(db):
