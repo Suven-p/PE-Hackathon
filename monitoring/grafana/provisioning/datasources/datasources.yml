@@ -5,7 +5,6 @@ datasources:
   type: prometheus
   access: proxy
   url: http://prometheus:9090
-  isDefault: true
   editable: true
 
 - name: Loki
@@ -18,4 +17,12 @@ datasources:
   type: tempo
   access: proxy
   url: http://tempo:3200
+  editable: true
+
+- name: InfluxDB-k6
+  type: influxdb
+  access: proxy
+  url: http://influxdb:8086
+  database: k6db
+  isDefault: true
   editable: true

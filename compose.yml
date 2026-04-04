@@ -89,6 +89,17 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
 
+  influxdb:
+    image: influxdb:1.0
+    container_name: pe-hackathon-influxdb
+    environment:
+      INFLUXDB_DB: ${INFLUXDB_DB:-k6db}
+      INFLUXDB_HTTP_AUTH_ENABLED: ${INFLUXDB_HTTP_AUTH_ENABLED:-false}
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
   grafana:
     image: grafana/grafana:11.2.0
     container_name: pe-hackathon-grafana
@@ -115,4 +126,5 @@ volumes:
   loki_data:
   tempo_data:
   prometheus_data:
+  influxdb_data:
   grafana_data:
