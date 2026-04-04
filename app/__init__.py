@@ -93,4 +93,9 @@ def create_app():
         except Exception:
             return jsonify(status="error", db="unreachable"), 503
 
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        print(f"Unhandled exception: {e}")
+        return {"error": "Internal server error"}, 500
+
     return app
