@@ -89,7 +89,7 @@ def create_app():
     def health():
         try:
             db.execute_sql("SELECT 1")
-            return jsonify(status="ok", db="connected")
+            return jsonify(status="ok", db="connected", hostname=os.uname().nodename), 200
         except Exception:
             return jsonify(status="error", db="unreachable"), 503
 
