@@ -58,7 +58,7 @@ def register_user(username: str, email: str) -> User:
         raise ValueError(
             f"Email too long. Must be at most {lengths['email']} characters")
 
-    return User.create(id=1, username=username, email=email)
+    return User.create(username=username, email=email)
 
 
 def update_user(id: int, username: str):
