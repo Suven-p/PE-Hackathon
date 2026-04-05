@@ -26,10 +26,10 @@ export function setup() {
 
 export default function () {
   let res, body;
-  // res = http.get(`${BASE_URL}/health`);
-  // Get status value from json body
-  // body = JSON.parse(res.body);
-  // check(res, { "status is 200": (res) => res.status === 200 && body.status === "ok" });
+  res = http.get(`${BASE_URL}/health`);
+  // Get status value from json body;
+  body = JSON.parse(res.body);
+  check(res, { "status is 200": (res) => res.status === 200 && body.status === "ok" });
 
   let index = scenario.iterationInTest % data.length;
   let { short_url, long_url } = data[index];
