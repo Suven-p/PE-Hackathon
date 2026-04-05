@@ -4,6 +4,7 @@ import time
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 import csv
 import os
 
@@ -130,9 +131,8 @@ def create_app():
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # For unsupported media type
-        if hasattr(e, "code") and e.code == 415:
-            return jsonify({"error": "Unsupported Media Type. Please use 'application/json'."}), 415
+        if isinstance(e, HTTPException):
+            return jsonify({"error": e.description}), e.code
         app.logger.error("Unhandled exception: %s", e)
         app.logger.exception(e)
         return {"error": "Internal server error"}, 500
