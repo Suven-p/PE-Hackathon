@@ -13,6 +13,7 @@ from werkzeug.exceptions import HTTPException
 import csv
 import os
 
+
 from app.database import init_db
 from app.errors import error_response
 from app.logger import JsonFormatter
@@ -139,9 +140,26 @@ def create_app():
     from app.models.user import User
     from app.models.url import Url
     from app.models.event import Event
+    from prometheus_client import start_http_server, make_wsgi_app
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry import metrics
+    from prometheus_client import make_wsgi_app
+    from werkzeug.middleware.dispatcher import DispatcherMiddleware
+
+    # Set up Prometheus metric reader
+    reader = PrometheusMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    metrics.set_meter_provider(provider)
+
     db.create_tables([User, Url, Event], safe=True)
     _migrate_schema(db)
     _insert_sample_data(db, app.logger)
+
+    # Mount /metrics as a sub-application
+    app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+        '/prometheus': make_wsgi_app()
+    })
 
     register_routes(app)
 
