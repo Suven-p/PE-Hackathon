@@ -2,6 +2,7 @@ services:
   app:
     image: python:3.13-slim
     working_dir: /app
+    restart: unless-stopped
     command: sh -c "pip install --no-cache-dir uv && uv sync && uv run python run.py"
     environment:
       TZ: ${TZ:-UTC}
