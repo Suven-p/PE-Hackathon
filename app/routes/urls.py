@@ -113,7 +113,6 @@ def get_url(url_id):
 
 @urls_bp.route("/urls/<int:url_id>", methods=["PUT"])
 def update_url(url_id):
-    raise NameError("This endpoint is currently disabled for testing purposes")
     data = request.get_json(silent=True)
     if not data:
         return error_response("Missing request body", 400, error_code="missing_request_body")
