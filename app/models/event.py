@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 
+from flask import current_app
 from peewee import DateTimeField, IntegerField, TextField
 
 from app.database import BaseModel
@@ -50,9 +51,9 @@ def log_event(url, event_type: str, user=None, details: dict = None) -> None:
             details=json.dumps(details, default=str) if details else None,
         )
     except Exception as e:
-        print(f"Error logging event: {e}")
-        print(
-            f"Failed to log event: url_id={_get_primary_key(url) if url is not None else 'N/A'}, event_type={event_type}, user_id={_get_primary_key(user) if user is not None else 'N/A'}, details={details}")
+        current_app.logger.error(
+            f"Error logging event: url_id={_get_primary_key(url) if url is not None else 'N/A'}, event_type={event_type}, user_id={_get_primary_key(user) if user is not None else 'N/A'}, details={details}")
+        current_app.logger.exception(e)
 
 
 def get_events_for_url(url) -> list:

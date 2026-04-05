@@ -1,10 +1,14 @@
+from logging.config import dictConfig
+import time
+
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import csv
 import os
 
 from app.database import init_db
+from app.logger import JsonFormatter
 from app.routes import register_routes
 from app.models.user import User, set_user_sequence_value
 from app.models.url import Url, set_url_sequence_value
@@ -27,19 +31,19 @@ def _migrate_schema(db):
             pass  # column already exists or table doesn't exist yet — safe=True handles that
 
 
-def _insert_sample_data(db):
+def _insert_sample_data(db, logger):
     should_initialize = os.environ.get(
         "DATABASE_INITIALIZE", "true").lower() == "true"
     if should_initialize:
         seed_directory = os.environ.get("DATABASE_SEED_DIRECTORY", "db_seed")
         if not os.path.isdir(seed_directory):
-            print(f"Seed directory not found: {seed_directory}")
+            logger.warning("Seed directory not found: %s", seed_directory)
             return
 
         with open(os.path.join(seed_directory, "users.csv"), "r") as f:
             reader = csv.DictReader(f)
             data = list(reader)  # read all rows into memory to get the count
-            print(f"Initializing database with {len(data)} users...")
+            logger.info("Initializing database with %d users...", len(data))
 
             with db.atomic():
                 User.insert_many(data).on_conflict_ignore().execute()
@@ -48,7 +52,7 @@ def _insert_sample_data(db):
         with open(os.path.join(seed_directory, "urls.csv"), "r") as f:
             reader = csv.DictReader(f)
             data = list(reader)  # read all rows into memory to get the count
-            print(f"Initializing database with {len(data)} URLs...")
+            logger.info("Initializing database with %d URLs...", len(data))
 
             with db.atomic():
                 Url.insert_many(data).on_conflict_ignore().execute()
@@ -57,17 +61,47 @@ def _insert_sample_data(db):
         with open(os.path.join(seed_directory, "events.csv"), "r") as f:
             reader = csv.DictReader(f)
             data = list(reader)  # read all rows into memory to get the count
-            print(f"Initializing database with {len(data)} events...")
+            logger.info("Initializing database with %d events...", len(data))
 
             with db.atomic():
                 Event.insert_many(data).on_conflict_ignore().execute()
             set_event_sequence_value(db)
     else:
-        print("Database initialization skipped. Set DATABASE_INITIALIZE=true to enable.")
+        logger.info(
+            "Database initialization skipped. Set DATABASE_INITIALIZE=true to enable.")
 
 
 def create_app():
     load_dotenv()
+
+    dictConfig({
+        "version": 1,
+        "disable_existing_loggers": False,
+
+        "formatters": {
+            "json": {
+                "()": JsonFormatter,
+            }
+        },
+
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "json",
+                "stream": "ext://sys.stdout",
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "formatter": "json",
+                "filename": "logs/application.log",
+            },
+        },
+
+        "root": {
+            "level": "INFO",
+            "handlers": ["console", "file"]
+        }
+    })
 
     app = Flask(__name__)
     app.url_map.strict_slashes = False
@@ -82,7 +116,7 @@ def create_app():
     from app.models.event import Event
     db.create_tables([User, Url, Event], safe=True)
     _migrate_schema(db)
-    _insert_sample_data(db)
+    _insert_sample_data(db, app.logger)
 
     register_routes(app)
 
@@ -99,7 +133,26 @@ def create_app():
         # For unsupported media type
         if hasattr(e, "code") and e.code == 415:
             return jsonify({"error": "Unsupported Media Type. Please use 'application/json'."}), 415
-        print(f"Unhandled exception {type(e).__name__}: {e}")
+        app.logger.error("Unhandled exception: %s", e)
+        app.logger.exception(e)
         return {"error": "Internal server error"}, 500
+
+    @app.before_request
+    def start_timer():
+        request.start_time = time.time()
+
+    @app.after_request
+    def log_request(response):
+        duration = (time.time() - request.start_time) * 1000
+
+        app.logger.info(
+            "%s %s %s %0.2fms",
+            request.method,
+            request.path,
+            response.status_code,
+            duration
+        )
+
+        return response
 
     return app
