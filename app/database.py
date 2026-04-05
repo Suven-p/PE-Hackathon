@@ -19,7 +19,8 @@ def init_db(app):
         user=os.environ.get("DATABASE_USER", "postgres"),
         password=os.environ.get("DATABASE_PASSWORD", "postgres"),
         max_connections=int(os.environ.get("DATABASE_MAX_CONNECTIONS", 20)),
-        stale_timeout=300,  # Close connections idle for more than 5 minutes
+        stale_timeout=300,  # Close connections idle for more than 5 minutes,
+        timeout=30,  # Wait up to 30 seconds for a connection if the pool is exhausted
         sslmode="require" if os.environ.get(
             "DATABASE_SSL", "false").lower() == "true" else "disable",
     )
