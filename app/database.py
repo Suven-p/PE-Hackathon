@@ -1,6 +1,6 @@
 import os
 
-from peewee import DatabaseProxy, Model, PostgresqlDatabase
+from peewee import DatabaseProxy, Model
 from playhouse.pool import PooledPostgresqlDatabase
 
 db = DatabaseProxy()
@@ -17,7 +17,7 @@ def init_db(app):
         host=os.environ.get("DATABASE_HOST", "localhost"),
         port=int(os.environ.get("DATABASE_PORT", 5432)),
         user=os.environ.get("DATABASE_USER", "postgres"),
-        password=os.environ.get("DATABASE_PASSWORD", "postgres"),
+        password=os.environ.get("DATABASE_PASSWORD"),
         max_connections=int(os.environ.get("DATABASE_MAX_CONNECTIONS", 20)),
         stale_timeout=300,  # Close connections idle for more than 5 minutes,
         timeout=30,  # Wait up to 30 seconds for a connection if the pool is exhausted

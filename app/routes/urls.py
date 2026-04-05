@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, redirect, request
 
+from app.errors import error_response
 from app.models.event import log_event
 from app.models.url import Url, UrlInactiveError, create_short_url, delete_url, get_url_by_code, update_short_url
 from app.models.user import User
@@ -26,16 +27,24 @@ def _url_response(url: Url) -> dict:
 def create_url():
     data = request.get_json(silent=True)
     if not data or "original_url" not in data:
-        return jsonify({"error": "Missing 'original_url' in request body"}), 400
+        return error_response(
+            "Missing 'original_url' in request body",
+            400,
+            error_code="missing_original_url",
+        )
 
     user = None
     if "user_id" in data:
         try:
             user = User.get_by_id(data["user_id"])
         except User.DoesNotExist:
-            return jsonify({"error": "User not found"}), 404
+            return error_response("User not found", 404, error_code="user_not_found")
     else:
-        return jsonify({"error": "Missing 'user_id' in request body"}), 400
+        return error_response(
+            "Missing 'user_id' in request body",
+            400,
+            error_code="missing_user_id",
+        )
 
     try:
         url = create_short_url(
@@ -49,7 +58,7 @@ def create_url():
         })
         return jsonify(_url_response(url)), 201
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return error_response(str(e), 400, error_code="invalid_url_payload")
 
 
 @urls_bp.route("/urls", methods=["GET"])
@@ -66,13 +75,13 @@ def list_urls():
             id = int(id)
             query = query.where(Url.id == id)
         except ValueError:
-            return jsonify({"error": "'id' must be an integer"}), 400
+            return error_response("'id' must be an integer", 400, error_code="invalid_id")
     if user_id:
         try:
             user_id = int(user_id)
             user = User.get_by_id(user_id)
         except (ValueError, User.DoesNotExist):
-            return jsonify({"error": "'user_id' is not valid"}), 400
+            return error_response("'user_id' is not valid", 400, error_code="invalid_user_id")
         query = query.where(Url.user_id == user_id)
     if title:
         query = query.where(Url.title.contains(title))
@@ -82,7 +91,11 @@ def list_urls():
         query = query.where(Url.original_url.contains(original_url))
     if is_active is not None:
         if not isinstance(is_active, bool) and is_active.lower() not in ["true", "false"]:
-            return jsonify({"error": "'is_active' must be a boolean value"}), 400
+            return error_response(
+                "'is_active' must be a boolean value",
+                400,
+                error_code="invalid_is_active",
+            )
         query = query.where(Url.is_active == (is_active.lower() == "true"))
     return jsonify([_url_response(url) for url in query]), 200
 
@@ -93,23 +106,27 @@ def get_url(url_id):
         url = Url.get_by_id(url_id)
         return jsonify(_url_response(url)), 200
     except Url.DoesNotExist:
-        return jsonify({"error": "URL not found"}), 404
+        return error_response("URL not found", 404, error_code="url_not_found")
 
 
 @urls_bp.route("/urls/<int:url_id>", methods=["PUT"])
 def update_url(url_id):
     data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "Missing request body"}), 400
+        return error_response("Missing request body", 400, error_code="missing_request_body")
 
     try:
         url = Url.get_by_id(url_id)
     except Url.DoesNotExist:
-        return jsonify({"error": "URL not found"}), 404
+        return error_response("URL not found", 404, error_code="url_not_found")
 
     is_active = data.get("is_active")
     if is_active is not None and not isinstance(is_active, bool) and is_active.lower() not in ["true", "false"]:
-        return jsonify({"error": "'is_active' must be a boolean value"}), 400
+        return error_response(
+            "'is_active' must be a boolean value",
+            400,
+            error_code="invalid_is_active",
+        )
 
     try:
         updated = update_short_url(
@@ -122,7 +139,7 @@ def update_url(url_id):
                   "url_id": url_id, "url": _url_response(updated)})
         return jsonify(_url_response(updated)), 200
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return error_response(str(e), 400, error_code="invalid_url_payload")
 
 
 @urls_bp.route("/urls/<int:url_id>", methods=["DELETE"])
@@ -133,7 +150,7 @@ def delete_url_endpoint(url_id):
                   "url_id": url_id, "reason": "user_requested"})
         return jsonify({"message": "URL deleted"}), 200
     except LookupError as e:
-        return jsonify({"error": str(e)}), 404
+        return error_response(str(e), 404, error_code="url_not_found")
 
 
 @urls_bp.route("/<short_code>", methods=["GET"])
@@ -143,8 +160,10 @@ def redirect_url(short_code):
         log_event(url, "redirected", details={"short_code": short_code})
         return redirect(url.original_url, code=302)
     except Url.DoesNotExist:
-        return jsonify({"error": "Short code not found"}), 404
+        return error_response("Short code not found", 404, error_code="short_code_not_found")
     except UrlInactiveError:
-        return jsonify({"error": "This short link has been deactivated"}), 410
-    except Exception:
-        return jsonify({"error": "Internal server error"}), 500
+        return error_response(
+            "This short link has been deactivated",
+            410,
+            error_code="short_link_inactive",
+        )
