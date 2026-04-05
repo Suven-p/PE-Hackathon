@@ -6,8 +6,8 @@ services:
     command: [
       "sh",
       "-c",
-      "pip install --no-cache-dir uv && uv sync && uv run run.py"
-      # "pip install --no-cache-dir uv && uv sync && uv run opentelemetry-instrument --metrics_exporter otlp --logs_exporter otlp --traces_exporter otlp python run.py"
+      # "pip install --no-cache-dir uv && uv sync && uv run run.py"
+      "pip install --no-cache-dir uv && uv sync && uv run opentelemetry-instrument --metrics_exporter otlp --logs_exporter otlp --traces_exporter otlp python run.py"
     ]
     environment:
       TZ: ${TZ:-UTC}
@@ -28,7 +28,7 @@ services:
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-pe-hackathon}
       PYTHONUNBUFFERED: ${PYTHONUNBUFFERED:-1}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-      DATABASE_INITIALIZE: ${DATABASE_INITIALIZE:-false}
+      DATABASE_INITIALIZE: true
       DATABASE_SEED_DIRECTORY: ${DATABASE_SEED_DIRECTORY:-./seeds}
       LOG_DIR: ${LOG_DIR:-/app/logs}
     expose:

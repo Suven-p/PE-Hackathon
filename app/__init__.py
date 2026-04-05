@@ -148,19 +148,19 @@ def create_app():
     from prometheus_client import make_wsgi_app
     from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-    # # Set up Prometheus metric reader
-    # reader = PrometheusMetricReader()
-    # provider = MeterProvider(metric_readers=[reader])
-    # metrics.set_meter_provider(provider)
+    # Set up Prometheus metric reader
+    reader = PrometheusMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    metrics.set_meter_provider(provider)
 
     db.create_tables([User, Url, Event], safe=True)
     _migrate_schema(db)
     _insert_sample_data(db, app.logger)
 
-    # # Mount /metrics as a sub-application
-    # app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-    #     '/metrics': make_wsgi_app()
-    # })
+    # Mount /metrics as a sub-application
+    app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+        '/metrics': make_wsgi_app()
+    })
 
     register_routes(app)
 
@@ -218,7 +218,14 @@ def create_app():
                 request.method,
                 request.path,
                 response.status_code,
-                duration
+                duration,
+                extra={"extra": {
+                    "request_id": g.request_id,
+                    "method": request.method,
+                    "path": request.path,
+                    "status_code": response.status_code,
+                    "duration_ms": duration,
+                }}
             )
         except Exception as e:
             print("Error logging request: %s", e)
