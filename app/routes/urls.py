@@ -54,12 +54,19 @@ def create_url():
 
 @urls_bp.route("/urls", methods=["GET"])
 def list_urls():
+    id = request.args.get("id")
     user_id = request.args.get("user_id")
     title = request.args.get("title")
     short_code = request.args.get("short_code")
     original_url = request.args.get("original_url")
     is_active = request.args.get("is_active")
     query = Url.select().order_by(Url.created_at.desc())
+    if id:
+        try:
+            id = int(id)
+            query = query.where(Url.id == id)
+        except ValueError:
+            return jsonify({"error": "'id' must be an integer"}), 400
     if user_id:
         try:
             user_id = int(user_id)
