@@ -162,6 +162,58 @@ mlh-pe-hackathon/
 └── uv.lock                         # uv lockfile for pinned dependencies
 ```
 
+## Environment Variables
+
+The application can be configured through a `.env` file in the project root.
+
+| Variable Name               | Example Value                        | Description                                                                |
+| --------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| FLASK_DEBUG                 | true                                 | Enables Flask debug behavior for local development.                        |
+| FLASK_USE_RELOADER          | false                                | Disables the Flask auto-reloader (causes issue with opentelemetry).        |
+| DATABASE_INITIALIZE         | true                                 | Seeds/initializes database data during app startup when enabled.           |
+| DATABASE_SEED_DIRECTORY     | ./seeds                              | Directory containing `users.csv`, `urls.csv`, and `events.csv` seed files. |
+| DATABASE_NAME               | hackathon_db                         | PostgreSQL database name used by the app.                                  |
+| DATABASE_HOST               | postgres                             | PostgreSQL host (Compose service name in Docker setup).                    |
+| DATABASE_PORT               | 5432                                 | PostgreSQL port.                                                           |
+| DATABASE_USER               | postgres                             | PostgreSQL username used by the app.                                       |
+| DATABASE_PASSWORD           | postgres123                          | PostgreSQL password for `DATABASE_USER`.                                   |
+| DATABASE_MAX_CONNECTIONS    | 300                                  | Maximum database connections target for the app/database tuning.           |
+| OTEL_EXPORTER_OTLP_ENDPOINT | http://alloy:4318                    | OpenTelemetry collector endpoint for traces/metrics/logs export.           |
+| OTEL_EXPORTER_OTLP_PROTOCOL | http/protobuf                        | OTLP transport protocol used by telemetry exporters.                       |
+| OTEL_SERVICE_NAME           | pe-hackathon                         | Service name shown in telemetry backends (Prometheus/Tempo/Grafana views). |
+| PYTHONUNBUFFERED            | 1                                    | Forces immediate stdout/stderr flushing so logs appear in real time.       |
+| REDIS_URL                   | redis://redis:6379/0                 | Redis connection URL for caching and related features.                     |
+| REDIRECT_CACHE_TTL_SECONDS  | 300                                  | Redirect cache TTL in seconds.                                             |
+| GF_SECURITY_ADMIN_USER      | admin                                | Grafana admin username.                                                    |
+| GF_SECURITY_ADMIN_PASSWORD  | admin123                             | Grafana admin password.                                                    |
+| GF_USERS_ALLOW_SIGN_UP      | false                                | Enables/disables user self-signup in Grafana.                              |
+| APP_PROXY_PORT              | 5001                                 | Host port mapped to the Nginx reverse proxy container.                     |
+| TZ                          | Asia/Kathmandu                       | Container timezone setting.                                                |
+| LOG_DIR                     | logs                                 | Directory path for application log files.                                  |
+| DISCORD_WEBHOOK_URL         | https://discord.com/api/webhooks/... | Discord webhook used by Grafana alerting contact points.                   |
+
+Security note:
+
+- Treat `DATABASE_PASSWORD`, `GF_SECURITY_ADMIN_PASSWORD`, and `DISCORD_WEBHOOK_URL` as secrets.
+- Do not commit real secret values to source control.
+
+## Monitoring and Observability
+
+- **Prometheus**: Collects metrics from the app and database. Configured to scrape the app at `/metrics` and PostgreSQL metrics.
+- **Grafana**: Visualizes metrics and logs. Pre-configured with dashboards for app metrics and Loki logs.
+- **Loki**: Collects and indexes logs from the app and database. Configured to scrape logs from the `logs/` directory.
+- **Alloy**: Collects distributed traces from the app. Configured with OpenTelemetry
+  instrumentation in the app and sends traces to Alloy's backend.
+- **Tempo**: Collects and stores distributed traces. Configured to receive traces from the app and integrate with Grafana for visualization.
+- **InfluxDB**: Stores load testing results as time-series data. Configured to receive metrics from k6 load tests and integrate with Grafana for visualization.
+
+Preconfigured dashboards and alerting rules are included for each monitoring tool, but you can customize them further in Grafana's UI. The included dashboards and alerting rules are:
+
+- **App Metrics Dashboard**: Visualizes key performance metrics from the app, such as request latency, error rates, cpu usage and number of requests.
+- **Loki Logs Dashboard**: Provides a view into the logs collected by Loki, allowing you to filter and search through logs from the app and database.
+- **k6 Load Testing Dashboard**: Visualizes metrics from k6 load tests, such as request duration, error rates, and virtual user count.
+- **Alerting Rules**: Pre-configured alerting rules for high cpu usage. This sends alerts to a Discord webhook when the CPU usage exceeds 20% for more than 5 minutes. Discord webhook URL can be configured in the `.env` file with the `DISCORD_WEBHOOK_URL` variable.
+
 ## How to Add a Model
 
 1. Create a file in `app/models/`, e.g. `app/models/product.py`:
