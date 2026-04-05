@@ -2,7 +2,7 @@ services:
   app:
     image: python:3.13-slim
     working_dir: /app
-    restart: always
+    restart: unless-stopped
     command: [
       "sh",
       "-c",
@@ -50,6 +50,7 @@ services:
   alloy:
     image: grafana/alloy:v1.8.3
     container_name: pe-hackathon-alloy
+    restart: unless-stopped
     command: ["run", "/etc/alloy/config.alloy"]
     expose:
       - "4317"
@@ -70,7 +71,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     container_name: pe-hackathon-nginx
-    restart: always
+    restart: unless-stopped
     ports:
       - "${APP_PROXY_PORT:-5001}:80"
     environment:
@@ -84,6 +85,7 @@ services:
   postgres:
     image: postgres:17
     container_name: pe-hackathon-postgres
+    restart: unless-stopped
     command: postgres -c max_connections=10000
     environment:
       TZ: ${TZ:-UTC}
@@ -103,6 +105,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: pe-hackathon-redis
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
@@ -112,6 +115,7 @@ services:
   loki:
     image: grafana/loki:3.7.1
     container_name: pe-hackathon-loki
+    restart: unless-stopped
     command: ["-config.file=/etc/loki/loki.yml"]
     expose:
       - "3100"
@@ -124,6 +128,7 @@ services:
   tempo:
     image: grafana/tempo:2.10.3
     container_name: pe-hackathon-tempo
+    restart: unless-stopped
     command: ["-config.file=/etc/tempo/tempo.yml"]
     expose:
       - "3200"
@@ -140,6 +145,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.11.0
     container_name: pe-hackathon-prometheus
+    restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -155,6 +161,7 @@ services:
   influxdb:
     image: influxdb:1.0
     container_name: pe-hackathon-influxdb
+    restart: unless-stopped
     environment:
       INFLUXDB_DB: ${INFLUXDB_DB:-k6db}
       INFLUXDB_HTTP_AUTH_ENABLED: ${INFLUXDB_HTTP_AUTH_ENABLED:-false}
@@ -166,6 +173,7 @@ services:
   grafana:
     image: grafana/grafana:12.4.2
     container_name: pe-hackathon-grafana
+    restart: unless-stopped
     environment:
       TZ: ${TZ:-UTC}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
