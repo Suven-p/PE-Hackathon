@@ -28,6 +28,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       DATABASE_INITIALIZE: ${DATABASE_INITIALIZE:-false}
       DATABASE_SEED_DIRECTORY: ${DATABASE_SEED_DIRECTORY:-./seeds}
+      LOG_DIR: ${LOG_DIR:-/app/logs}
     expose:
       - "${FLASK_RUN_PORT:-5000}"
     volumes:
@@ -55,6 +56,7 @@ services:
       - "12345:12345"
     volumes:
       - ./monitoring/alloy.alloy:/etc/alloy/config.alloy:ro
+      - ./logs:/appLogs
     depends_on:
       loki:
         condition: service_started
