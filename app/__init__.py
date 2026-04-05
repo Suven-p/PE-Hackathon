@@ -1,4 +1,7 @@
 from logging.config import dictConfig
+import random
+import socket
+import string
 import time
 
 from dotenv import load_dotenv
@@ -72,9 +75,24 @@ def _insert_sample_data(db, logger):
             "Database initialization skipped. Set DATABASE_INITIALIZE=true to enable.")
 
 
+def get_log_filename():
+    try:
+        hostname = socket.gethostname()
+    except Exception:
+        hostname = None
+
+    if not hostname:
+        hostname = ''.join(random.choices(
+            string.ascii_letters + string.digits, k=6))
+
+    return f"application-{hostname}.log"
+
+
 def create_app():
     load_dotenv()
 
+    log_dir = os.environ.get("LOG_DIR", "logs")
+    log_file = os.path.join(log_dir, get_log_filename())
     dictConfig({
         "version": 1,
         "disable_existing_loggers": False,
@@ -94,7 +112,7 @@ def create_app():
             "file": {
                 "class": "logging.FileHandler",
                 "formatter": "json",
-                "filename": "logs/application.log",
+                "filename": log_file,
             },
         },
 
