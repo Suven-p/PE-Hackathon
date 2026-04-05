@@ -4,6 +4,7 @@ from app.errors import error_response
 from app.models.event import log_event
 from app.models.url import Url, UrlInactiveError, create_short_url, delete_url, get_url_by_code, update_short_url
 from app.models.user import User
+from app.utils.redirect_cache import delete_redirect_cache, get_redirect_cache, set_redirect_cache
 
 urls_bp = Blueprint("urls", __name__)
 
@@ -56,6 +57,7 @@ def create_url():
             "short_code": url.short_code,
             "original_url": url.original_url,
         })
+        set_redirect_cache(url)
         return jsonify(_url_response(url)), 201
     except ValueError as e:
         return error_response(str(e), 400, error_code="invalid_url_payload")
@@ -135,6 +137,7 @@ def update_url(url_id):
             title=data.get("title"),
             is_active=data.get("is_active"),
         )
+        set_redirect_cache(updated)
         log_event(updated, "updated", details={
                   "url_id": url_id, "url": _url_response(updated)})
         return jsonify(_url_response(updated)), 200
@@ -146,6 +149,7 @@ def update_url(url_id):
 def delete_url_endpoint(url_id):
     try:
         url = delete_url(url_id)
+        delete_redirect_cache(url.short_code)
         log_event(url, "deleted", details={
                   "url_id": url_id, "reason": "user_requested"})
         return jsonify({"message": "URL deleted"}), 200
@@ -155,9 +159,24 @@ def delete_url_endpoint(url_id):
 
 @urls_bp.route("/<short_code>", methods=["GET"])
 def redirect_url(short_code):
+    cached = get_redirect_cache(short_code)
+    if cached:
+        if not cached["is_active"]:
+            return error_response(
+                "This short link has been deactivated",
+                410,
+                error_code="short_link_inactive",
+            )
+
+        log_event(cached.get("url_id"), "redirected", details={
+                  "short_code": short_code, "cache_hit": True})
+        return redirect(cached["original_url"], code=302)
+
     try:
         url = get_url_by_code(short_code)
-        log_event(url, "redirected", details={"short_code": short_code})
+        set_redirect_cache(url)
+        log_event(url, "redirected", details={
+                  "short_code": short_code, "cache_hit": False})
         return redirect(url.original_url, code=302)
     except Url.DoesNotExist:
         return error_response("Short code not found", 404, error_code="short_code_not_found")

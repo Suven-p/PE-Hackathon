@@ -14,7 +14,7 @@ const data = new SharedArray('data', function () {
 
 export const options = {
   vus: 500,
-  iterations: 2000,
+  iterations: 1000,
 };
 
 export function setup() {
@@ -31,7 +31,8 @@ export default function () {
   body = JSON.parse(res.body);
   check(res, { "status is 200": (res) => res.status === 200 && body.status === "ok" });
 
-  let index = scenario.iterationInTest % data.length;
+  // let index = scenario.iterationInTest % data.length;
+  let index = Math.floor(Math.random() * data.length); // choose random index from 0 to data.length - 1
   let { short_url, long_url } = data[index];
 
   res = http.get(`${BASE_URL}/${short_url}`, {

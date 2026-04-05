@@ -95,7 +95,8 @@ def get_log_filename():
 def create_app():
     load_dotenv()
 
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    project_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), ".."))
     log_dir = os.environ.get("LOG_DIR", os.path.join(project_root, "logs"))
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, get_log_filename())
@@ -147,19 +148,19 @@ def create_app():
     from prometheus_client import make_wsgi_app
     from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-    # Set up Prometheus metric reader
-    reader = PrometheusMetricReader()
-    provider = MeterProvider(metric_readers=[reader])
-    metrics.set_meter_provider(provider)
+    # # Set up Prometheus metric reader
+    # reader = PrometheusMetricReader()
+    # provider = MeterProvider(metric_readers=[reader])
+    # metrics.set_meter_provider(provider)
 
     db.create_tables([User, Url, Event], safe=True)
     _migrate_schema(db)
     _insert_sample_data(db, app.logger)
 
-    # Mount /metrics as a sub-application
-    app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-        '/metrics': make_wsgi_app()
-    })
+    # # Mount /metrics as a sub-application
+    # app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
+    #     '/metrics': make_wsgi_app()
+    # })
 
     register_routes(app)
 

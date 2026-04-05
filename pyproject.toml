@@ -28,6 +28,7 @@ dependencies = [
     "pip>=26.0.1",
     "opentelemetry-exporter-prometheus>=0.61b0",
     "prometheus-client>=0.24.1",
+    "redis>=5.2",
 ]
 
 [tool.setuptools.packages.find]
