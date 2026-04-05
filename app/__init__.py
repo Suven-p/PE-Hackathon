@@ -143,15 +143,18 @@ def create_app():
 
     @app.after_request
     def log_request(response):
-        duration = (time.time() - request.start_time) * 1000
+        try:
+            duration = (time.time() - request.start_time) * 1000
 
-        app.logger.info(
-            "%s %s %s %0.2fms",
-            request.method,
-            request.path,
-            response.status_code,
-            duration
-        )
+            app.logger.info(
+                "%s %s %s %0.2fms",
+                request.method,
+                request.path,
+                response.status_code,
+                duration
+            )
+        except Exception as e:
+            print("Error logging request: %s", e)
 
         return response
 
