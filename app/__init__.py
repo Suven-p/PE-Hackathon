@@ -152,7 +152,7 @@ def create_app():
 
     # Mount /metrics as a sub-application
     app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
-        '/prometheus': make_wsgi_app()
+        '/metrics': make_wsgi_app()
     })
 
     register_routes(app)
