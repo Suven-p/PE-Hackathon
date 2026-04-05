@@ -1,12 +1,32 @@
 # Load Testing Report
 
-## Summary
+## Definition of Terms
+
+- **Virtual Users (VUs)**: Simulated users that generate load on the application. Each VU executes the test script independently, allowing us to simulate concurrent users.
+- **Iterations**: The number of times each VU will execute the test script. For example, if we have 100 VUs and 2000 iterations, there will be a total of 200,000 script executions (100 VUs \* 2000 iterations).
+- **Checks**: Assertions in the test script that validate the responses from the application. For example, a check might assert that the response status code is 200 or that the response body contains certain data. If the script has 2 checks, each iteration will have 2 checks, and the total number of checks will be (number of VUs) _ (number of iterations) _ (number of checks per iteration).
+- **Response Time**: The time it takes for the application to respond to a request. This is typically measured in milliseconds (ms) or seconds (s).
+- **Failed Requests**: The number of requests that did not receive a successful response (e.g., HTTP status codes 4xx or 5xx). This can indicate issues with the application under load.
+- **95th Percentile (p95)**: The response time below which 95% of the requests fall. This is a common metric used to understand the typical response time while excluding outliers.
+- **Max Response Time**: The longest response time recorded during the test. This can indicate the worst-case performance of the application under load.
+- **Average Response Time**: The mean response time across all requests. This gives an overall sense of the application's performance under load.
+- **Error Rate**: The percentage of failed requests out of the total requests. This can indicate the stability of the application under load. This can be calculated across all checks or for individual checks to identify issues with specific endpoints or functionalities.
+- **Database Pooling**: A technique used to manage database connections efficiently. Instead of opening and closing a new connection for each request, a pool of connections is maintained and reused, which can improve performance and reduce the likelihood of connection-related errors under load.
+
+## Definition of Success
+
+For this load testing, the definition of success is as follows:
+
+- The p95 response time should be under 3 seconds. This means that 95% of the requests should receive a response within 3 seconds, which is generally considered acceptable for web applications.
+- The error rate should be under 5% for the entire test. This means that less than 5% of all requests should fail, indicating that the application can handle the load without significant issues.
+
+## Bottleneck Report
 
 - With a single container and default database configuration, the application can handle up to 100 VUs with acceptable response times and a low error rate (<1%). However, at 200 VUs, the response times increase significantly and there is a high error rate due to database connection issues.
-- Increasing the number of containers to 2 improves the response times and reduces the error rate. There are no errors at 100 VUs.However, at 200 VUs, there are significant number of failed requests (>15%).
+- Increasing the number of containers to 2 improves the response times and reduces the error rate. There are no errors at 100 VUs.However, at 200 VUs, there are significant number of failed requests (>15%). The logs indicate that database is blocking new connections due to max connection limit being reached.
 - Optimizing the database configuration by enabling connection pooling and increasing the max connections allows the application to handle 200 VUs with significantly improved response times and no failed requests. The application can also handle 500 VUs with acceptable response times and no failed requests.
 
-NOTE: The test are run with 2000 iterations and 2000 shortlink in the database. This is the worst possible combination of requests where almost no request are repeated. Since the majority of requests are unique, there should be no significant effect of caching data.
+NOTE: The test are run with 2000 iterations and 2000 shortlink in the database. This is the worst possible combination of requests where almost no request are repeated. Since the majority of requests are unique, there should be no significant effect of caching data for this specific suite of tests. In a real-world scenario, there may be more repeated requests which can benefit from caching and further improve response times.
 
 ## Running Tests
 
@@ -77,7 +97,7 @@ This test is run with the default configuration of the application, which includ
   - Average Response Time: 608.93ms
   - Max Response Time: 949.58ms
   - 95th Percentile: 752.26ms
-  - Failed Requests: 11 total,4/2000 (1%) for health check, 7/2000 (1%) for redirect check
+  - Failed Requests: 11 total, 4/2000 (1%) for health check, 7/2000 (1%) for redirect check
 
 - Observations:
   - The application seems to be able to handle 100 VUs fairly well. There are less errors compared to 50 VUs, but the response time has increased.
@@ -147,7 +167,7 @@ For this scenario, the number of containers running the application is increased
   - Failed Requests: 0
 
 - Observations:
-  - The response time has slightly increased compared to baseline, but there are no failed requests. The application seems to be able to handle 100 VUs with two containers.
+  - The response time has slightly increased compared to baseline, but is still within acceptable limit. There are no failed requests. The application seems to be able to handle 100 VUs with two containers.
 
 ### 200 VUs, 2000 iterations
 

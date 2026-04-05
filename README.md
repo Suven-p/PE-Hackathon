@@ -1,10 +1,14 @@
 # MLH PE Hackathon — Project by Purrduction Engineers
 
-**Stack:** Flask · Peewee ORM · PostgreSQL · uv
+**Stack:** Flask · Peewee ORM · PostgreSQL · uv · Redis · Prometheus · Grafana · Loki · Alloy · Tempo
 
 ## Prerequisites
 
-- **uv** — a fast Python package manager that handles Python versions, virtual environments, and dependencies automatically.
+- **Docker & Docker Compose** — for containerizing the app, database and all other services. Install from [docker.com](https://www.docker.com/get-started). This is the easiest option for development and testing as it has all dependencies pre-configured.
+
+### If running locally without Docker, you will need:
+
+- **uv**(Optional) — a fast Python package manager that handles Python versions, virtual environments, and dependencies automatically. This can run the app locally but needs additional setup of dependencies.
   Install it with:
 
   ```bash
@@ -18,6 +22,18 @@
   For other methods see the [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/).
 
 - PostgreSQL running locally (you can use Docker or a local instance)
+
+- (Optional) Redis running locally (you can use Docker or a local instance)
+
+- (Optional) Prometheus for metrics collection (you can use Docker or a local instance)
+
+- (Optional) Loki for logs visualization (you can use Docker or a local instance)
+
+- (Optional) Alloy and Tempo for distributed tracing (you can use Docker or a local instance)
+
+- (Optional) Grafana for monitoring (you can use Docker or a local instance)
+
+- (Optional) InfluxDB for storing load testing results as time-series data (you can use Docker or a local instance)
 
 ## uv Basics
 
@@ -72,6 +88,78 @@ mlh-pe-hackathon/
 ├── pyproject.toml           # Project metadata + dependencies
 ├── run.py                   # Entry point: uv run run.py
 └── README.md
+
+
+├── README.md
+├── app
+│   ├── __init__.py                 # App factory (create_app)
+│   ├── database.py                 # DatabaseProxy, BaseModel, connection hooks
+│   ├── errors.py                   # Custom error handlers
+│   ├── frontend                    # React frontend project
+│   ├── logger.py                   # JSON Logging configuration
+│   ├── models
+│   │   ├── __init__.py             # Import your models here
+│   │   ├── event.py                # Event model
+│   │   ├── url.py                  # URL model
+│   │   └── user.py                 # User model
+│   ├── routes
+│   │   ├── __init__.py             # register_routes() — add blueprints here
+│   │   ├── events.py               # Event-related routes
+│   │   ├── urls.py                 # URL-related routes
+│   │   └── users.py                # User-related routes
+│   └── utils
+│       └── isPostgres.py           # Utility to check if DB is PostgreSQL
+├── compose.yml                     # Docker Compose configuration
+├── docs
+│   └── evidence                    # Documentation and evidence for the hackathon
+│       ├── Incidence Response      # For Incidence Response Quest
+│       ├── Reliability             # For Reliability Quest
+│       └── Scalability             # For Scalability Quest
+├── init.sh                         # Get packages for opentelemetry
+├── k6
+│   ├── run.ps1                     # Windows load test script
+│   ├── run.sh                      # Linux load test script
+│   ├── script.js                   # Load testing script
+│   └── urls.csv                    # Test data for load testing; Needs to be manually loaded to DB before running load tests
+├── logs                            # Directory for application logs (mounted to app and monitoring containers)
+├── monitoring
+│   ├── alloy.alloy                 # Alloy configuration file
+│   ├── grafana
+│   │   ├── dashboards
+│   │   │   ├── k6.json             # Grafana dashboard for k6 load testing results
+│   │   │   └── logs.json           # Grafana dashboard for Loki logs
+│   │   └── provisioning
+│   │       ├── dashboards
+│   │       │   └── dashboards.yml  # Grafana provisioning for dashboards
+│   │       └── datasources
+│   │           └── datasources.yml # Grafana provisioning for data sources
+│   ├── loki.yml                    # Loki configuration file
+│   ├── nginx
+│   │   └── nginx.conf              # Nginx configuration for reverse proxy
+│   ├── prometheus.yml              # Prometheus configuration file
+│   └── tempo.yml                   # Tempo configuration file
+├── pyproject.toml                  # Project metadata + dependencies
+├── run.py                          # Entry point: uv run run.py
+├── scalability                     # Directory for scalability-related documentation and scripts
+│   ├── README.md                   # Documentation for scalability quest
+├── scripts
+│   └── chaos-restart-proof.ps1     # PowerShell script to restart the app container for chaos testing
+├── seeds                           # CSV seed files for initializing the database
+│   ├── events.csv
+│   ├── urls.csv
+│   └── users.csv
+├── tests                           # Unit and integration tests
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_api_health.py
+│   ├── test_api_urls.py
+│   ├── test_api_users.py
+│   ├── test_error_contract.py
+│   ├── test_event_logic.py
+│   ├── test_graceful_failure.py
+│   ├── test_url_logic.py
+│   └── test_user_logic.py
+└── uv.lock                         # uv lockfile for pinned dependencies
 ```
 
 ## How to Add a Model
