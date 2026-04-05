@@ -4,6 +4,9 @@
 
 - With a single container and default database configuration, the application can handle up to 100 VUs with acceptable response times and a low error rate (<1%). However, at 200 VUs, the response times increase significantly and there is a high error rate due to database connection issues.
 - Increasing the number of containers to 2 improves the response times and reduces the error rate. There are no errors at 100 VUs.However, at 200 VUs, there are significant number of failed requests (>15%).
+- Optimizing the database configuration by enabling connection pooling and increasing the max connections allows the application to handle 200 VUs with significantly improved response times and no failed requests. The application can also handle 500 VUs with acceptable response times and no failed requests.
+
+NOTE: The test are run with 2000 iterations and 2000 shortlink in the database. This is the worst possible combination of requests where almost no request are repeated. Since the majority of requests are unique, there should be no significant effect of caching data.
 
 ## Running Tests
 
@@ -40,10 +43,8 @@ The number of virtual users (VUs) was set at 50, 100, 200 and 500 with 2000 iter
 
 This test is run with the default configuration of the application, which includes 1 container and the default database configuration of max_connections = 100 and no database connection pooling. The results of this test will serve as a baseline for comparison with other scenarios.
 
-<details>
-<summary>
-50 VUs, 2000 iterations
-</summary>
+### 50 VUs, 2000 iterations
+
 - Test Configuration:
   - Virtual Users (VUs): 50
   - Iterations: 2000
@@ -60,7 +61,6 @@ This test is run with the default configuration of the application, which includ
 
 - Observations:
   - The application seems to be able to handle 50 VUs fairly well. However there are some failed requests, most of which are due to database connection issues.
-  </details>
 
 ### 100 VUs, 2000 iterations
 
@@ -102,7 +102,7 @@ This test is run with the default configuration of the application, which includ
 - Observations:
   - The application seems to be struggling handle 200 VUs fairly well. The response time has increased significantly and there are more failed requests compared to 100 VUs. The failed requests are mostly due to database connection issues.
 
-## Scenario 2 - Increased Containers:
+## Scenario 2 - Horizontal Scaling:
 
 For this scenario, the number of containers running the application is increased to 2 while keeping the default database configuration. The results of this test will be compared to the default configuration to see if increasing the number of containers has any impact on the performance of the application.
 
@@ -168,3 +168,49 @@ For this scenario, the number of containers running the application is increased
 
 - Observations:
   - The application seems to be struggling handle 200 VUs even with two containers. Both the response times and number of failed requests have decreased compared to baseline, but there are still a significant number of failed requests due to database connection issues. This suggests that the bottleneck is likely at the database level and increasing the number of containers alone may not be sufficient to handle higher loads. Furthermore, increasing the number of containers may lead to increased contention for database connections causing more failed requests.
+
+## Scenario 3 - Database Optimization:
+
+For this scenario, `peewee.PostgresqlDatabase` is replaced with `playhouse.pool.PooledPostgresqlDatabase` to enable database connection pooling. The connection pool is configured with a maximum of 300 connections. The timeout parameter is set to 30 seconds so that pool exhaustion will not immediately lead to failed requests and will instead wait for a connection to be available. The max connections parameter of postgres is increased to 10,000 to ensure that the database can handle the increased number of connections from the connection pool. The test is run with 3 containers as in scenario 2 since increasing the number of containers alone did not seem to be sufficient to handle higher loads.
+
+Since the previous scenario had 0 failures at 100 VUs, the test is only run with 200 and 500 VUs to see if the database optimization can help reduce the number of failed requests and improve response times at higher loads.
+
+### 200 VUs, 2000 iterations
+
+- Test Configuration:
+  - Virtual Users (VUs): 200
+  - Iterations: 2000
+  - Cotainers: 3
+  - Database Configuration: max_connections = 10000, pool size = 300
+- Results:
+  ![Initial](200_users/database_optimization/image_1.png)
+  ![Initial](200_users/database_optimization/image_2.png)
+  ![Initial](200_users/database_optimization/image_3.png)
+  ![Initial](200_users/database_optimization/image_4.png)
+  - Average Response Time: 207.08ms
+  - Max Response Time: 960.05ms
+  - 95th Percentile: 615.17ms
+  - Failed Requests: 0
+
+- Observations:
+  - The application can seamlessly handle 200 VUs with the database optimization. The response time has significantly decreased compared to previous scenarios and there are no failed requests. This suggests that the database was indeed the bottleneck in previous scenarios and that optimizing the database configuration can have a significant impact on the performance of the application.
+
+### 500 VUs, 2000 iterations
+
+- Test Configuration:
+  - Virtual Users (VUs): 500
+  - Iterations: 2000
+  - Cotainers: 3
+  - Database Configuration: max_connections = 10000, pool size = 300
+- Results:
+  ![Initial](500_users/database_optimization/image_1.png)
+  ![Initial](500_users/database_optimization/image_2.png)
+  ![Initial](500_users/database_optimization/image_3.png)
+  ![Initial](500_users/database_optimization/image_4.png)
+  - Average Response Time: 907.08ms
+  - Max Response Time: 4s
+  - 95th Percentile: 1.74s
+  - Failed Requests: 0
+
+- Observations:
+  - The application is able to handle 500 VUs with database optimization, although the max response time has increased significantly. The p95 is still under 3 seconds which is acceptable for this application.

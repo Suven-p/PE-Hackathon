@@ -13,8 +13,8 @@ const data = new SharedArray('data', function () {
 });
 
 export const options = {
-  vus: 200,
-  iterations: 1000,
+  vus: 500,
+  iterations: 2000,
 };
 
 export function setup() {
