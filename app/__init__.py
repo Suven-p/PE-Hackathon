@@ -96,7 +96,10 @@ def create_app():
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        print(f"Unhandled exception: {e}")
+        # For unsupported media type
+        if hasattr(e, "code") and e.code == 415:
+            return jsonify({"error": "Unsupported Media Type. Please use 'application/json'."}), 415
+        print(f"Unhandled exception {type(e).__name__}: {e}")
         return {"error": "Internal server error"}, 500
 
     return app
