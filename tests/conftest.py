@@ -2,13 +2,16 @@
 # To run integration tests locally: createdb hackathon_test
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 os.environ["DATABASE_INITIALIZE"] = "false"
 os.environ["DATABASE_SSL"] = "false"
 os.environ.setdefault("DATABASE_NAME", "hackathon_test")
 os.environ.setdefault("DATABASE_HOST", "localhost")
 os.environ.setdefault("DATABASE_PORT", "5432")
 os.environ.setdefault("DATABASE_USER", "postgres")
-os.environ.setdefault("DATABASE_PASSWORD", "postgres")
 
 import pytest
 

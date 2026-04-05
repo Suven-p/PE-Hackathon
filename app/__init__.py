@@ -3,16 +3,19 @@ import random
 import socket
 import string
 import time
+import uuid
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, g, jsonify, request
 from flask_cors import CORS
+from peewee import InterfaceError, OperationalError
 from werkzeug.exceptions import HTTPException
 import csv
 import os
 
 
 from app.database import init_db
+from app.errors import error_response
 from app.logger import JsonFormatter
 from app.routes import register_routes
 from app.models.user import User, set_user_sequence_value
@@ -92,8 +95,11 @@ def get_log_filename():
 def create_app():
     load_dotenv()
 
-    log_dir = os.environ.get("LOG_DIR", "logs")
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    log_dir = os.environ.get("LOG_DIR", os.path.join(project_root, "logs"))
+    os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, get_log_filename())
+
     dictConfig({
         "version": 1,
         "disable_existing_loggers": False,
@@ -168,17 +174,41 @@ def create_app():
     @app.errorhandler(Exception)
     def handle_exception(e):
         if isinstance(e, HTTPException):
-            return jsonify({"error": e.description}), e.code
+            code = e.code or 500
+            return error_response(
+                e.description,
+                code,
+                error_code=f"http_{code}",
+                retryable=code >= 500,
+            )
+
+        if isinstance(e, (OperationalError, InterfaceError)):
+            app.logger.warning("Database unavailable: %s", e)
+            return error_response(
+                "Service temporarily unavailable",
+                503,
+                error_code="database_unavailable",
+                retryable=True,
+            )
+
         app.logger.error("Unhandled exception: %s", e)
         app.logger.exception(e)
-        return {"error": "Internal server error"}, 500
+        return error_response(
+            "Internal server error",
+            500,
+            error_code="internal_server_error",
+            retryable=True,
+        )
 
     @app.before_request
     def start_timer():
+        incoming_request_id = request.headers.get("X-Request-ID")
+        g.request_id = incoming_request_id or str(uuid.uuid4())
         request.start_time = time.time()
 
     @app.after_request
     def log_request(response):
+        response.headers["X-Request-ID"] = getattr(g, "request_id", "")
         try:
             duration = (time.time() - request.start_time) * 1000
 
