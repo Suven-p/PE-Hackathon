@@ -55,15 +55,27 @@ def create_url():
 @urls_bp.route("/urls", methods=["GET"])
 def list_urls():
     user_id = request.args.get("user_id")
+    title = request.args.get("title")
+    short_code = request.args.get("short_code")
+    original_url = request.args.get("original_url")
     is_active = request.args.get("is_active")
     query = Url.select().order_by(Url.created_at.desc())
     if user_id:
         try:
             user_id = int(user_id)
-        except ValueError:
-            return jsonify({"error": "'user_id' must be an integer"}), 400
+            user = User.get_by_id(user_id)
+        except (ValueError, User.DoesNotExist):
+            return jsonify({"error": "'user_id' is not valid"}), 400
         query = query.where(Url.user_id == user_id)
+    if title:
+        query = query.where(Url.title.contains(title))
+    if short_code:
+        query = query.where(Url.short_code == short_code)
+    if original_url:
+        query = query.where(Url.original_url.contains(original_url))
     if is_active is not None:
+        if not isinstance(is_active, bool) and is_active.lower() not in ["true", "false"]:
+            return jsonify({"error": "'is_active' must be a boolean value"}), 400
         query = query.where(Url.is_active == (is_active.lower() == "true"))
     return jsonify([_url_response(url) for url in query]), 200
 
@@ -89,7 +101,7 @@ def update_url(url_id):
         return jsonify({"error": "URL not found"}), 404
 
     is_active = data.get("is_active")
-    if is_active and not isinstance(is_active, bool):
+    if is_active is not None and not isinstance(is_active, bool) and is_active.lower() not in ["true", "false"]:
         return jsonify({"error": "'is_active' must be a boolean value"}), 400
 
     try:
@@ -99,7 +111,8 @@ def update_url(url_id):
             title=data.get("title"),
             is_active=data.get("is_active"),
         )
-        log_event(updated, "updated", details={"url_id": url_id})
+        log_event(updated, "updated", details={
+                  "url_id": url_id, "url": _url_response(updated)})
         return jsonify(_url_response(updated)), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

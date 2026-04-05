@@ -55,7 +55,9 @@ def create_short_url(original_url: str, user=None, title: str = None) -> "Url":
     if not original_url or not is_valid_url(original_url):
         raise ValueError("URL must start with http:// or https://")
 
-    if title and len(title) > lengths["title"]:
+    if not title:
+        raise ValueError("Title is required")
+    if len(title) > lengths["title"]:
         raise ValueError(
             f"Title too long. Must be at most {lengths['title']} characters")
 
