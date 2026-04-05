@@ -5,6 +5,9 @@ server:
 
 common:
   path_prefix: /loki
+  ring:
+    kvstore:
+      store: inmemory
   storage:
     filesystem:
       chunks_directory: /loki/chunks
