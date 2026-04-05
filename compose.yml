@@ -74,7 +74,7 @@ services:
       - redis_data:/data
 
   loki:
-    image: grafana/loki:3.1.1
+    image: grafana/loki:3.7.1
     container_name: pe-hackathon-loki
     command: ["-config.file=/etc/loki/loki.yml"]
     ports:
@@ -84,7 +84,7 @@ services:
       - loki_data:/loki
 
   tempo:
-    image: grafana/tempo:2.7.1
+    image: grafana/tempo:2.10.3
     container_name: pe-hackathon-tempo
     command: ["-config.file=/etc/tempo/tempo.yml"]
     ports:
@@ -96,7 +96,7 @@ services:
       - tempo_data:/var/tempo
 
   prometheus:
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v3.11.0
     container_name: pe-hackathon-prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -119,7 +119,7 @@ services:
       - influxdb_data:/var/lib/influxdb
 
   grafana:
-    image: grafana/grafana:11.2.0
+    image: grafana/grafana:12.4.2
     container_name: pe-hackathon-grafana
     environment:
       TZ: ${TZ:-UTC}
