@@ -1,6 +1,7 @@
 import csv
 import io
 
+from app.models.event import log_event
 from flask import Blueprint, jsonify, request
 
 from app.database import db
@@ -67,6 +68,8 @@ def create_user():
 
     try:
         user = register_user(username=username, email=email)
+        log_event(None, "user_registered", user.id, details={
+                  "user_id": user.id, "user": _serialize_user(user)})
         return jsonify(_serialize_user(user)), 201
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -93,8 +96,10 @@ def bulk_create_users_endpoint():
         return jsonify({"error": "Invalid CSV file", "status": 400}), 400
 
     result = bulk_create_users(db, rows)
+    log_event(None, "bulk_user_import", details={
+              "imported": result["imported"], "total": result["total"]})
     status_code = 201 if result["imported"] > 0 else 200
-    return jsonify({"imported": result["imported"]}), status_code
+    return jsonify({"imported": result["imported"], "total": result["total"]}), status_code
 
 
 @users_bp.route("/<int:user_id>", methods=["PUT"])
@@ -109,6 +114,8 @@ def update_user(user_id: int):
 
     try:
         user = update_user_logic(id=user_id, username=username)
+        log_event(None, "user_updated", user_id, details={
+                  "user_id": user.id, "user": _serialize_user(user)})
         return jsonify(_serialize_user(user)), 200
     except ValueError as e:
         return jsonify({"error": str(e), "status": 400}), 400
@@ -120,6 +127,7 @@ def update_user(user_id: int):
 def delete_user(user_id: int):
     try:
         delete_user_logic(user_id)
+        log_event(None, "user_deleted", user_id, details={"user_id": user_id})
         return jsonify({"message": "User deleted", "status": 200}), 200
     except LookupError as e:
         return jsonify({"error": str(e), "status": 404}), 404
