@@ -1,7 +1,5 @@
-from app.models.event import Event, get_all_events, get_events_for_url, serialize_event
+from app.models.event import Event, serialize_event
 from flask import Blueprint, jsonify, request
-
-from app.database import db
 
 events_bp = Blueprint("events", __name__, url_prefix="/events")
 
@@ -17,7 +15,7 @@ def list_events():
             url_id = int(url_id)
         except ValueError:
             return jsonify({"error": "'url_id' must be an integer", "status": 400}), 400
-        query = query.where(Event.url == url_id)
+        query = query.where(Event.url_id == url_id)
     if event_type is not None:
         query = query.where(Event.event_type == event_type)
 

@@ -58,7 +58,11 @@ def list_urls():
     is_active = request.args.get("is_active")
     query = Url.select().order_by(Url.created_at.desc())
     if user_id:
-        query = query.where(Url.user == user_id)
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return jsonify({"error": "'user_id' must be an integer"}), 400
+        query = query.where(Url.user_id == user_id)
     if is_active is not None:
         query = query.where(Url.is_active == (is_active.lower() == "true"))
     return jsonify([_url_response(url) for url in query]), 200
@@ -104,7 +108,9 @@ def update_url(url_id):
 @urls_bp.route("/urls/<int:url_id>", methods=["DELETE"])
 def delete_url_endpoint(url_id):
     try:
-        delete_url(url_id)
+        url = delete_url(url_id)
+        log_event(url, "deleted", details={
+                  "url_id": url_id, "reason": "user_requested"})
         return jsonify({"message": "URL deleted"}), 200
     except LookupError as e:
         return jsonify({"error": str(e)}), 404

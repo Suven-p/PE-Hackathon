@@ -116,6 +116,7 @@ def delete_url(url_id: int) -> None:
     if not url:
         raise LookupError("URL not found")
     url.delete_instance()
+    return url
 
 
 def set_url_sequence_value(db):

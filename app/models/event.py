@@ -1,11 +1,9 @@
 import json
 from datetime import datetime, timezone
 
-from peewee import DateTimeField, ForeignKeyField, PostgresqlDatabase, TextField
+from peewee import DateTimeField, IntegerField, TextField
 
 from app.database import BaseModel
-from app.models.url import Url
-from app.models.user import User
 from app.utils.isPostgres import is_postgres
 
 table_name = "events"
@@ -15,8 +13,8 @@ class Event(BaseModel):
     class Meta:
         table_name = table_name
 
-    url = ForeignKeyField(Url, backref="events")
-    user = ForeignKeyField(User, backref="events", null=True)
+    url_id = IntegerField(null=True)
+    user_id = IntegerField(null=True)
     event_type = TextField()
     timestamp = DateTimeField(default=lambda: datetime.now(timezone.utc))
     details = TextField(null=True)  # stored as JSON string
@@ -35,23 +33,32 @@ def serialize_event(event: Event) -> dict:
     }
 
 
-def log_event(url: Url, event_type: str, user=None, details: dict = None) -> None:
+def _get_primary_key(value):
+    if value is None:
+        return None
+    return getattr(value, "id", value)
+
+
+def log_event(url, event_type: str, user=None, details: dict = None) -> None:
     """Record an event for a URL. Best-effort: never raises."""
     try:
         Event.create(
-            url=url,
-            user=user,
+            url_id=_get_primary_key(url),
+            user_id=_get_primary_key(user),
             event_type=event_type,
             timestamp=datetime.now(timezone.utc),
             details=json.dumps(details, default=str) if details else None,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error logging event: {e}")
+        print(
+            f"Failed to log event: url_id={_get_primary_key(url) if url is not None else 'N/A'}, event_type={event_type}, user_id={_get_primary_key(user) if user is not None else 'N/A'}, details={details}")
 
 
-def get_events_for_url(url: Url) -> list:
+def get_events_for_url(url) -> list:
     """Return all events for a given URL, newest first."""
-    events = Event.select().where(Event.url == url).order_by(Event.timestamp.desc())
+    url_id = _get_primary_key(url)
+    events = Event.select().where(Event.url_id == url_id).order_by(Event.timestamp.desc())
     return list(events)
 
 
