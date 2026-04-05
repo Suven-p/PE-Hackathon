@@ -34,6 +34,8 @@ def create_url():
             user = User.get_by_id(data["user_id"])
         except User.DoesNotExist:
             return jsonify({"error": "User not found"}), 404
+    else:
+        return jsonify({"error": "Missing 'user_id' in request body"}), 400
 
     try:
         url = create_short_url(
@@ -48,8 +50,6 @@ def create_url():
         return jsonify(_url_response(url)), 201
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
-    except Exception:
-        return jsonify({"error": "Internal server error"}), 500
 
 
 @urls_bp.route("/urls", methods=["GET"])
@@ -84,6 +84,10 @@ def update_url(url_id):
     except Url.DoesNotExist:
         return jsonify({"error": "URL not found"}), 404
 
+    is_active = data.get("is_active")
+    if is_active and not isinstance(is_active, bool):
+        return jsonify({"error": "'is_active' must be a boolean value"}), 400
+
     try:
         updated = update_short_url(
             url,
@@ -95,8 +99,6 @@ def update_url(url_id):
         return jsonify(_url_response(updated)), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
-    except Exception:
-        return jsonify({"error": "Internal server error"}), 500
 
 
 @urls_bp.route("/urls/<int:url_id>", methods=["DELETE"])
@@ -120,4 +122,3 @@ def redirect_url(short_code):
         return jsonify({"error": "This short link has been deactivated"}), 410
     except Exception:
         return jsonify({"error": "Internal server error"}), 500
-

@@ -1,6 +1,7 @@
 import secrets
 import string
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from peewee import BooleanField, CharField, DateTimeField, ForeignKeyField, IntegrityError, PostgresqlDatabase
 
@@ -9,6 +10,11 @@ from app.models.user import User
 from app.utils.isPostgres import is_postgres
 
 table_name = "urls"
+lengths = {
+    "short_code": 10,
+    "original_url": 2048,
+    "title": 255,
+}
 
 
 class Url(BaseModel):
@@ -20,9 +26,9 @@ class Url(BaseModel):
 
     user = ForeignKeyField(User, backref="urls",
                            null=True, on_delete='CASCADE')
-    short_code = CharField(max_length=10, unique=True)
-    original_url = CharField(max_length=2048)
-    title = CharField(max_length=255, null=True)
+    short_code = CharField(max_length=lengths["short_code"], unique=True)
+    original_url = CharField(max_length=lengths["original_url"])
+    title = CharField(max_length=lengths["title"], null=True)
     is_active = BooleanField(default=True)
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
     updated_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
@@ -36,13 +42,22 @@ def generate_short_code(length: int = 6) -> str:
 
 
 def is_valid_url(url: str) -> bool:
-    return (url.startswith("http://") or url.startswith("https://")) and len(url) <= 2048
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except AttributeError:
+        return False
+    # return (url.startswith("http://") or url.startswith("https://")) and len(url) <= 2048
 
 
 def create_short_url(original_url: str, user=None, title: str = None) -> "Url":
     """Create and persist a short URL. Raises ValueError for bad input."""
     if not original_url or not is_valid_url(original_url):
         raise ValueError("URL must start with http:// or https://")
+
+    if title and len(title) > lengths["title"]:
+        raise ValueError(
+            f"Title too long. Must be at most {lengths['title']} characters")
 
     for _ in range(5):
         code = generate_short_code()
@@ -84,6 +99,9 @@ def update_short_url(url: "Url", original_url: str = None, title: str = None, is
             raise ValueError("URL must start with http:// or https://")
         url.original_url = original_url
     if title is not None:
+        if len(title) > lengths["title"]:
+            raise ValueError(
+                f"Title too long. Must be at most {lengths['title']} characters")
         url.title = title
     if is_active is not None:
         url.is_active = is_active
